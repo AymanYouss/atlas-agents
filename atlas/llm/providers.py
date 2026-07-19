@@ -8,7 +8,8 @@ output via ``with_structured_output``.
 
 from __future__ import annotations
 
-from typing import AsyncIterator, TypeVar
+from collections.abc import AsyncIterator
+from typing import TypeVar
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
@@ -71,7 +72,7 @@ class _LangChainClient(LLMClient):
     ) -> LLMResult:
         try:
             resp = await self._model.ainvoke(_to_lc(messages))
-        except Exception as exc:  # noqa: BLE001 - normalized to a provider error for retry
+        except Exception as exc:
             raise LLMProviderError(str(exc)) from exc
         text = resp.content if isinstance(resp.content, str) else str(resp.content)
         return LLMResult(text=text, usage=_usage_from(resp))
@@ -96,7 +97,7 @@ class _LangChainClient(LLMClient):
         structured_model = self._model.with_structured_output(schema, include_raw=False)
         try:
             result = await structured_model.ainvoke(_to_lc(messages))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise LLMProviderError(str(exc)) from exc
         if not isinstance(result, schema):
             result = schema.model_validate(result)

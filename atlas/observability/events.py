@@ -15,14 +15,15 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class EventType(str, Enum):
+class EventType(StrEnum):
     RUN_CREATED = "run_created"
     RUN_STATUS = "run_status"
     PLAN_CREATED = "plan_created"
@@ -49,7 +50,7 @@ class RunEvent(BaseModel):
     step_id: str | None = None
     agent: str | None = None
     payload: dict[str, Any] = Field(default_factory=dict)
-    ts: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    ts: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class EventBroker:
@@ -79,9 +80,7 @@ class EventBroker:
             q.put_nowait(event)
         return event
 
-    async def subscribe(
-        self, run_id: str, *, replay: bool = True
-    ) -> AsyncIterator[RunEvent]:
+    async def subscribe(self, run_id: str, *, replay: bool = True) -> AsyncIterator[RunEvent]:
         queue: asyncio.Queue[RunEvent] = asyncio.Queue(maxsize=1024)
         async with self._lock:
             if replay:

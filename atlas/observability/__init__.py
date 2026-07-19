@@ -10,7 +10,7 @@ from atlas.observability.logging import configure_logging, get_logger
 __all__ = [
     "EventType",
     "RunEvent",
-    "event_broker",
     "configure_logging",
+    "event_broker",
     "get_logger",
 ]

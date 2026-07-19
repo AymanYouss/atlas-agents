@@ -12,18 +12,14 @@ class Citation(BaseModel):
     source: str = Field(description="Tool or step that produced the evidence.")
     title: str = Field(default="", description="Human-readable title of the source.")
     url: str | None = Field(default=None, description="URL when the source is a web page.")
-    snippet: str = Field(
-        default="", description="The exact quoted evidence supporting the claim."
-    )
+    snippet: str = Field(default="", description="The exact quoted evidence supporting the claim.")
 
 
 class Report(BaseModel):
     """The synthesized answer with inline citations."""
 
     summary: str = Field(description="One-paragraph executive answer to the goal.")
-    body_markdown: str = Field(
-        description="Full report in Markdown with inline citation markers."
-    )
+    body_markdown: str = Field(description="Full report in Markdown with inline citation markers.")
     citations: list[Citation] = Field(default_factory=list)
     confidence: float = Field(
         default=0.0,

@@ -7,12 +7,12 @@ run independent branches concurrently while respecting data dependencies.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
 
-class StepStatus(str, Enum):
+class StepStatus(StrEnum):
     PENDING = "pending"
     READY = "ready"
     RUNNING = "running"

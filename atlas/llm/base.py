@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import abc
-from enum import Enum
-from typing import AsyncIterator, TypeVar
+from collections.abc import AsyncIterator
+from enum import StrEnum
+from typing import TypeVar
 
 from pydantic import BaseModel
 
 TModel = TypeVar("TModel", bound=BaseModel)
 
 
-class AgentRole(str, Enum):
+class AgentRole(StrEnum):
     PLANNER = "planner"
     EXECUTOR = "executor"
     CRITIC = "critic"
@@ -56,13 +57,18 @@ class LLMClient(abc.ABC):
     @abc.abstractmethod
     async def complete(
         self, messages: list[LLMMessage], *, temperature: float = 0.2, max_tokens: int = 4096
-    ) -> LLMResult:
-        ...
+    ) -> LLMResult: ...
 
     @abc.abstractmethod
-    async def stream(
+    def stream(
         self, messages: list[LLMMessage], *, temperature: float = 0.2, max_tokens: int = 4096
     ) -> AsyncIterator[str]:
+        """Yield reasoning tokens as they arrive.
+
+        Declared as a plain method returning an ``AsyncIterator`` (not ``async
+        def``) so that concrete implementations can be async generators without a
+        return-type variance conflict.
+        """
         ...
 
     @abc.abstractmethod
@@ -73,5 +79,4 @@ class LLMClient(abc.ABC):
         *,
         temperature: float = 0.0,
         max_tokens: int = 4096,
-    ) -> TModel:
-        ...
+    ) -> TModel: ...

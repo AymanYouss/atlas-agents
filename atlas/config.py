@@ -83,9 +83,7 @@ class Settings(BaseSettings):
     @property
     def sync_database_url(self) -> str:
         """Sync driver URL used by the LangGraph Postgres checkpointer."""
-        return self.database_url.replace("+asyncpg", "").replace(
-            "postgresql://", "postgresql://"
-        )
+        return self.database_url.replace("+asyncpg", "").replace("postgresql://", "postgresql://")
 
     @property
     def is_production(self) -> bool:
