@@ -18,8 +18,8 @@ for the runtime image.
 
 from __future__ import annotations
 
-import io
-import tarfile
+import base64
+import json
 import uuid
 from dataclasses import dataclass, field
 
@@ -29,10 +29,22 @@ from atlas.observability.logging import get_logger
 log = get_logger("atlas.sandbox")
 
 _LANG_CMD = {
-    "python": ["python", "/workspace/main.py"],
-    "bash": ["bash", "/workspace/main.sh"],
+    "python": ["python", "main.py"],
+    "bash": ["bash", "main.sh"],
 }
 _LANG_FILE = {"python": "main.py", "bash": "main.sh"}
+
+# A tiny in-container bootstrap: decode the base64 JSON payload from the
+# environment, materialize its files into the writable tmpfs workspace, then run
+# the entrypoint. This avoids host->container file copies, which the Docker API
+# rejects against a read-only rootfs even when the target is a tmpfs mount.
+_BOOTSTRAP = (
+    "import base64,json,os,subprocess,sys;"
+    "p=json.loads(base64.b64decode(os.environ['ATLAS_PAYLOAD']).decode());"
+    "os.chdir('/workspace');"
+    "[open(k,'w').write(v) for k,v in p['files'].items()];"
+    "sys.exit(subprocess.call(p['cmd']))"
+)
 
 
 class SandboxUnavailableError(RuntimeError):
@@ -94,11 +106,14 @@ class DockerSandbox:
         client = self._client()
         name = f"atlas-sbx-{uuid.uuid4().hex[:12]}"
         files = {_LANG_FILE[language]: code, **(extra_files or {})}
+        payload = base64.b64encode(
+            json.dumps({"files": files, "cmd": _LANG_CMD[language]}).encode()
+        ).decode()
         start = _time.perf_counter()
 
         container = client.containers.create(
             image=self._settings.sandbox_image,
-            command=_LANG_CMD[language],
+            command=["python", "-c", _BOOTSTRAP],
             name=name,
             network_mode=self._settings.sandbox_network,
             mem_limit=self._settings.sandbox_memory_limit,
@@ -106,16 +121,22 @@ class DockerSandbox:
             nano_cpus=self._nano_cpus(),
             pids_limit=128,
             read_only=True,
-            tmpfs={"/workspace": "rw,size=64m,exec", "/tmp": "rw,size=32m"},
+            tmpfs={
+                "/workspace": "rw,size=64m,exec,mode=1777",
+                "/tmp": "rw,size=32m,mode=1777",
+            },
             working_dir="/workspace",
             user="1000:1000",
             cap_drop=["ALL"],
             security_opt=["no-new-privileges"],
-            environment={"HOME": "/workspace", "PYTHONDONTWRITEBYTECODE": "1"},
+            environment={
+                "HOME": "/workspace",
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "ATLAS_PAYLOAD": payload,
+            },
             detach=True,
         )
         try:
-            container.put_archive("/workspace", _tar_bytes(files))
             container.start()
             timed_out = False
             try:
@@ -148,17 +169,3 @@ class DockerSandbox:
                 container.remove(force=True)
             except Exception:  # best-effort cleanup
                 log.warning("sandbox_cleanup_failed", container=name)
-
-
-def _tar_bytes(files: dict[str, str]) -> bytes:
-    """Pack ``files`` into an in-memory tar for ``put_archive``."""
-    buf = io.BytesIO()
-    with tarfile.open(fileobj=buf, mode="w") as tar:
-        for path, content in files.items():
-            data = content.encode("utf-8")
-            info = tarfile.TarInfo(name=path)
-            info.size = len(data)
-            info.mode = 0o644
-            tar.addfile(info, io.BytesIO(data))
-    buf.seek(0)
-    return buf.read()
