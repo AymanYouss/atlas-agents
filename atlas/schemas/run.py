@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
-class RunStatus(str, Enum):
+class RunStatus(StrEnum):
     PENDING = "pending"
     PLANNING = "planning"
     EXECUTING = "executing"
@@ -89,7 +89,7 @@ class Critique(BaseModel):
     retry_recommended: bool = False
 
 
-class ApprovalDecision(str, Enum):
+class ApprovalDecision(StrEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"

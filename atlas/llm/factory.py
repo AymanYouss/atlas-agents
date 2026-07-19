@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import cache
 
 from atlas.config import Settings, get_settings
 from atlas.llm.base import AgentRole, LLMClient
@@ -17,7 +17,7 @@ def _model_for(role: AgentRole, settings: Settings) -> str:
     }[role]
 
 
-@lru_cache(maxsize=None)
+@cache
 def _cached_client(role: AgentRole, provider: str, model: str) -> LLMClient:
     settings = get_settings()
     if provider == "anthropic":
@@ -28,9 +28,7 @@ def _cached_client(role: AgentRole, provider: str, model: str) -> LLMClient:
         return AnthropicClient(model, role, settings.anthropic_api_key)
     if provider == "openai":
         if not settings.openai_api_key:
-            raise RuntimeError(
-                "OPENAI_API_KEY is not set; cannot construct an OpenAI client."
-            )
+            raise RuntimeError("OPENAI_API_KEY is not set; cannot construct an OpenAI client.")
         return OpenAIClient(model, role, settings.openai_api_key)
     raise ValueError(f"unknown LLM provider: {provider!r}")
 
