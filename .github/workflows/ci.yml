@@ -21,6 +21,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
 
       - name: Set up Python
         run: uv python install 3.12
@@ -54,7 +55,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
 
