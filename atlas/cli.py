@@ -57,6 +57,81 @@ def run(
     asyncio.run(_run_goal(goal, auto_approve))
 
 
+eval_app = typer.Typer(help="Run the benchmark / evaluation suites.")
+app.add_typer(eval_app, name="eval")
+
+
+@eval_app.command("run")
+def eval_run(
+    suite: str = typer.Option(
+        "", help="Path to a suite YAML. Omit with --all to run every bundled suite."
+    ),
+    all_suites: bool = typer.Option(False, "--all", help="Run all bundled suites."),
+    out: str = typer.Option("", help="Write the JSON report to this path."),
+) -> None:
+    """Execute a benchmark suite and print a scored summary."""
+    asyncio.run(_eval(suite, all_suites, out))
+
+
+async def _eval(suite: str, all_suites: bool, out: str) -> None:
+    import json
+
+    from rich.table import Table
+
+    from atlas.eval.report import SuiteReport
+    from atlas.eval.runner import EvalRunner
+    from atlas.eval.suite import load_suite, suites_dir
+
+    if all_suites:
+        paths = sorted(suites_dir().glob("*.yaml"))
+    elif suite:
+        paths = [__import__("pathlib").Path(suite)]
+    else:
+        console.print("[red]Provide --suite <path> or --all[/red]")
+        raise typer.Exit(1)
+
+    runner = EvalRunner()
+    reports: list[SuiteReport] = []
+    for path in paths:
+        loaded = load_suite(path)
+        console.print(f"[cyan]Running suite[/cyan] {loaded.name} ({len(loaded.tasks)} tasks)...")
+        report = await runner.run_suite(loaded)
+        reports.append(report)
+        _print_suite(report, Table)
+
+    if out:
+        payload = [
+            r.summary_dict() | {"outcomes": [o.model_dump() for o in r.outcomes]} for r in reports
+        ]
+        __import__("pathlib").Path(out).write_text(json.dumps(payload, indent=2, default=str))
+        console.print(f"[green]Wrote report to[/green] {out}")
+
+
+def _print_suite(report, Table) -> None:
+    table = Table(title=f"Suite: {report.suite}", header_style="bold cyan")
+    table.add_column("task")
+    table.add_column("category")
+    table.add_column("pass", justify="center")
+    table.add_column("score", justify="right")
+    table.add_column("steps", justify="right")
+    table.add_column("cites", justify="right")
+    for o in report.outcomes:
+        table.add_row(
+            o.task_id,
+            o.category,
+            "[green]✓[/green]" if o.passed else "[red]✗[/red]",
+            f"{o.score:.2f}",
+            str(o.steps),
+            str(o.citations),
+        )
+    console.print(table)
+    console.print(
+        f"[bold]Success rate:[/bold] {report.success_rate:.0%}  "
+        f"[bold]mean score:[/bold] {report.mean_score:.2f}  "
+        f"[bold]blocked injections:[/bold] {report.blocked_injections}\n"
+    )
+
+
 async def _run_goal(goal: str, auto_approve: bool) -> None:
     from atlas.graph.orchestrator import Orchestrator
     from atlas.observability.events import EventType, event_broker

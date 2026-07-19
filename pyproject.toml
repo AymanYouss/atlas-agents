@@ -40,6 +40,7 @@ dependencies = [
     "prometheus-client>=0.21.0",
     "typer>=0.13.0",
     "rich>=13.9.0",
+    "pyyaml>=6.0.2",
 ]
 
 [project.optional-dependencies]
@@ -51,7 +52,9 @@ dev = [
     "ruff>=0.7.3",
     "mypy>=1.13.0",
     "types-requests>=2.32.0",
+    "types-pyyaml>=6.0.12",
     "freezegun>=1.5.1",
+    "matplotlib>=3.9.2",
 ]
 
 [project.scripts]

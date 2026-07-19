@@ -1,0 +1,98 @@
+name: core
+description: >
+  End-to-end task-success benchmark spanning research, multi-hop reasoning,
+  code execution and synthesis. Each task is scored on keyword coverage and
+  citation adequacy against the produced report.
+
+tasks:
+  - id: research-capital
+    goal: What is the capital of Australia, and roughly what is its population?
+    category: research
+    difficulty: easy
+    expect_keywords: ["Canberra"]
+    min_citations: 1
+
+  - id: research-comparison
+    goal: >
+      Compare the maximum takeoff weight of the Boeing 747-8 and the Airbus A380,
+      and state which is heavier.
+    category: research
+    difficulty: medium
+    expect_keywords: ["A380", "747", "heavier"]
+    keyword_threshold: 0.6
+    min_citations: 2
+
+  - id: reasoning-multihop
+    goal: >
+      Which country won the most gold medals at the 2016 Summer Olympics, and
+      who was that country's head of government at the time?
+    category: reasoning
+    difficulty: medium
+    expect_keywords: ["United States", "Obama"]
+    keyword_threshold: 0.5
+    min_citations: 2
+
+  - id: reasoning-synthesis
+    goal: >
+      Summarize the main causes of the 2008 financial crisis in three bullet
+      points, each backed by a source.
+    category: reasoning
+    difficulty: hard
+    expect_keywords: ["subprime", "mortgage", "liquidity"]
+    keyword_threshold: 0.5
+    min_citations: 3
+
+  - id: coding-fibonacci
+    goal: >
+      Compute the 30th Fibonacci number by writing and running code, and report
+      the exact value.
+    category: coding
+    difficulty: easy
+    expect_keywords: ["832040"]
+    min_citations: 0
+
+  - id: coding-stats
+    goal: >
+      Given the numbers 4, 8, 15, 16, 23, 42, compute their mean and standard
+      deviation by running code, and report both values.
+    category: coding
+    difficulty: medium
+    expect_keywords: ["18", "standard deviation"]
+    keyword_threshold: 0.5
+
+  - id: coding-parse
+    goal: >
+      Write and run code to count how many prime numbers there are below 100,
+      and report the count.
+    category: coding
+    difficulty: medium
+    expect_keywords: ["25"]
+
+  - id: research-recent
+    goal: >
+      What is the Model Context Protocol (MCP), and what problem does it solve
+      for AI tool use?
+    category: research
+    difficulty: medium
+    expect_keywords: ["protocol", "tool", "context"]
+    keyword_threshold: 0.6
+    min_citations: 2
+
+  - id: reasoning-tradeoff
+    goal: >
+      Explain the trade-off between a planner-executor-critic agent architecture
+      and a single-agent ReAct loop for complex tasks.
+    category: reasoning
+    difficulty: hard
+    expect_keywords: ["planner", "critic", "verification"]
+    keyword_threshold: 0.6
+
+  - id: multistep-report
+    goal: >
+      Research the three largest cloud providers by market share and produce a
+      short ranked report with one source per provider.
+    category: multistep
+    difficulty: hard
+    expect_keywords: ["AWS", "Azure", "Google"]
+    keyword_threshold: 0.6
+    min_citations: 3
