@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: atlas-config
+  namespace: atlas
+data:
+  ATLAS_ENV: "production"
+  ATLAS_LOG_LEVEL: "INFO"
+  ATLAS_API_HOST: "0.0.0.0"
+  ATLAS_API_PORT: "8000"
+  ATLAS_CORS_ORIGINS: "https://atlas.example.com"
+  ATLAS_LLM_PROVIDER: "anthropic"
+  ATLAS_PLANNER_MODEL: "claude-opus-4-8"
+  ATLAS_EXECUTOR_MODEL: "claude-sonnet-4-6"
+  ATLAS_CRITIC_MODEL: "claude-opus-4-8"
+  ATLAS_MAX_STEPS: "24"
+  ATLAS_MAX_WALL_CLOCK_SECONDS: "900"
+  ATLAS_ENABLE_METRICS: "true"
+---
+# Example only. In production these come from an ExternalSecret backed by AWS
+# Secrets Manager (see deploy/aws/secrets.tf); never commit real values.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: atlas-secrets
+  namespace: atlas
+type: Opaque
+stringData:
+  ANTHROPIC_API_KEY: "REPLACE_ME"
+  OPENAI_API_KEY: ""
+  TAVILY_API_KEY: "REPLACE_ME"
+  ATLAS_DATABASE_URL: "postgresql+asyncpg://atlas:REPLACE_ME@atlas-postgres:5432/atlas"

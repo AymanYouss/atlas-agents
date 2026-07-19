@@ -1,0 +1,16 @@
+region          = "eu-west-1"
+environment      = "production"
+cluster_name     = "atlas"
+cluster_version  = "1.31"
+
+node_instance_types = ["m6i.large"]
+node_desired_size   = 3
+node_min_size       = 3
+node_max_size       = 8
+
+db_instance_class    = "db.t4g.medium"
+db_allocated_storage = 50
+
+# Prefer setting these out of band (TF_VAR_anthropic_api_key) rather than in a file.
+# anthropic_api_key = ""
+# tavily_api_key    = ""
