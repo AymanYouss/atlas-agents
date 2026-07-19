@@ -105,5 +105,7 @@ class Plan(BaseModel):
         return [
             s
             for s in self.steps
-            if s.status is StepStatus.PENDING and set(s.depends_on) <= completed
+            if s.status is StepStatus.PENDING
+            and s.id not in completed
+            and set(s.depends_on) <= completed
         ]
